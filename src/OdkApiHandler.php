@@ -22,21 +22,6 @@ class OdkApiHandler
 {
 	// region PROPERTIES
 	/**
-	 * The ODK API endpoint list.
-	 *
-	 * @var array
-	 */
-	private $endpoints = [
-		"authentication" => [
-			"sessionAuthentication" => [
-				"loggingIn" => "%BASEURL%/v1/sessions",
-				"loggingInMethod" => "post",
-				"loggingOut" => "%BASEURL%/v1sessions/%TOKEN%",
-				"loggingOutMethod" => "del",
-			]
-		]
-	];
-	/**
 	 * The base URL where your ODK Central server is hosted.
 	 *
 	 * @var string
