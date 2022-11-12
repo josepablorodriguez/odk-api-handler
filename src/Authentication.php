@@ -1,53 +1,30 @@
 <?php
 declare(strict_types = 1);
 /**
- * The OdkApiHandler authentication object.
+ * The OdkApiHandler Authentication object.
  */
 
 namespace App\Ihub\odkApiHandler\src;
 
 class Authentication{
 	/**
-	 * The Authentication credentials.
-	 *
-	 * @var array
-	 */
-	private $credentials = [
-		"email" => null,
-		"password" => null,
-	];
-	/**
 	 * The endpoint URL.
 	 *
 	 * @var array
 	 */
-	private $endpoints = [
-		"logIn" => null,
-		"logOut" => null,
-	];
+	private $endpoints;
 	/**
 	 * The response of the logIn request.
 	 *
 	 * @var array
 	 */
-	private $response = [
-		"token" => null,
-		"csrf" => null,
-		"expiresAt" => null,
-		"createdAt" => null,
-	];
-	/**
-	 * The obtained token after logging In.
-	 *
-	 * @var string
-	 */
-	private $token = "";
+	private $response;
 	/**
 	 * The authentication type.
 	 *
 	 * @var string
 	 */
-	private $type = "";
+	private $type;
 
 	/**
 	 * Authentication Object.
@@ -57,7 +34,7 @@ class Authentication{
 	 * ```
 	 *
 	 * @param string $authentication_type Authentication Type
-	 * @return Authentication
+	 * @return void
 	 * @link https://odkapihandler.portafolio.dev
 	 * @codeCoverageIgnore
 	 */
@@ -80,8 +57,13 @@ class Authentication{
 		}
 	}
 
+	/**
+	 * Requests a log-in to the defined ODK Central server.
+	 *
+	 * @param array $credentials The array containing "email" and "password".
+	 * @return void
+	 */
 	public function logIn(array $credentials){
-		$this->credentials = $credentials;
 		$curl = curl_init();
 
 		curl_setopt($curl, CURLOPT_URL, $this->endpoints["logIn"]["url"]);
@@ -100,13 +82,20 @@ class Authentication{
 
 		curl_close($curl);
 
-		$this->endpoints["logOut"]["url"] =
-			str_replace("%TOKEN%", $this->token, $this->endpoints["logOut"]["url"]);
+		if(array_key_exists("token", $this->response))
+			$this->endpoints["logOut"]["url"] =
+				str_replace("%TOKEN%", $this->response["token"], $this->endpoints["logOut"]["url"]);
 	}
+
+	/**
+	 * Requests a log-out to the defined ODK Central server.
+	 *
+	 * @return void
+	 */
 	public function logOut(){
 		$curl = curl_init();
 
-		curl_setopt($curl, CURLOPT_URL, $this->endpoints["logOut"]["url"] . $this->response["token"]);
+		curl_setopt($curl, CURLOPT_URL, $this->endpoints["logOut"]["url"]);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($curl, CURLOPT_HEADER, FALSE);
 
@@ -122,8 +111,23 @@ class Authentication{
 
 		curl_close($curl);
 	}
+
+	/**
+	 * Gets the "Response" of the last "Request".
+	 *
+	 * @return array
+	 */
 	public function getResponse(): array
 	{
 		return $this->response;
+	}
+
+	/**
+	 * Gets the "token" of the log-in "Request".
+	 *
+	 * @return string
+	 */
+	public function getToken(): string{
+		return $this->response["token"];
 	}
 }
