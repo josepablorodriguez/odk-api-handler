@@ -6,15 +6,16 @@ declare(strict_types = 1);
 
 namespace App\Ihub\odkApiHandler\src;
 
-class Authentication{
+class Authentication
+{
 	/**
-	 * The endpoint URL.
+	 * The endpoint URLs.
 	 *
 	 * @var array
 	 */
 	private $endpoints;
 	/**
-	 * The response of the logIn request.
+	 * The "Response" for the Authentication Handler's "Requests".
 	 *
 	 * @var array
 	 */
@@ -46,11 +47,11 @@ class Authentication{
 			case "app_user": { break;}
 			case "session": {
 				$this->endpoints["logIn"] = [
-					"url" => str_replace("%BASEURL%", $base_url, "%BASEURL%/v1/sessions"),
+					"url" => $base_url . "/v1/sessions",
 					"method" => "post",
 				];
 				$this->endpoints["logOut"] = [
-					"url" => str_replace("%BASEURL%", $base_url, "%BASEURL%/v1/sessions/%TOKEN%"),
+					"url" => $base_url . "/v1/sessions/%TOKEN%",
 					"method" => "del",
 				];
 			}
@@ -76,9 +77,7 @@ class Authentication{
 
 		curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
 
-		$response = json_decode(curl_exec($curl), true);
-
-		$this->response = $response;
+		$this->response = json_decode(curl_exec($curl), true);
 
 		curl_close($curl);
 
