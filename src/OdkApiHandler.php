@@ -33,6 +33,12 @@ class OdkApiHandler
 	 * @var Authentication
 	 */
 	private $authentication;
+	/**
+	 * The OdkApiHandler Project Handler object.
+	 *
+	 * @var Project
+	 */
+	private $project;
 	//endregion
 
 	public function __construct(array $config)
@@ -46,42 +52,38 @@ class OdkApiHandler
 	}
 
 	// region METHODS
+	// region PUBLIC
+
+	/**
+	 * Gets the "Authentication" handler Object.
+	 *
+	 * @return Authentication
+	 */
 	public function authentication(): Authentication{
 		return $this->authentication;
 	}
-	// region PUBLIC
+
+	/**
+	 * Gets the "Project" handler Object.
+	 *
+	 * @return Project
+	 */
+	public function project(): Project{
+		if(null == $this->project){
+			$this->project = new Project([
+				"baseUrl" => $this->base_url,
+				"token" => $this->authentication->getToken(),
+			]);
+		}
+
+		return $this->project;
+	}
+
 	//endregion
 	// region PRIVATE
-	private function getEndPoint(string $name): array
-	{
-		$endpoint = [
-			"status" => "ok",
-			"url" => null,
-			"method" => null,
-		];
-		if(null == $this->base_url){
-			$endpoint["status"] = "base url Not Set";
-			return $endpoint;
-		}
+	private function setToken(string $token){
 
-		switch($name){
-			case "loggingIn": {
-				$endpoint["url"] = str_replace("%BASEURL%", $this->base_url,
-					$this->endpoints["authentication"]["sessionAuthentication"]["loggingIn"]);
-				$endpoint["method"] = $this->endpoints["authentication"]["sessionAuthentication"]["loggingInMethod"];
-				break;
-			}
-			case "loggingOut": {
-				$endpoint["url"] = str_replace("%BASEURL%", $this->base_url,
-					$this->endpoints["authentication"]["sessionAuthentication"]["loggingOut"]);
-				$endpoint["method"] = $this->endpoints["authentication"]["sessionAuthentication"]["loggingOutMethod"];
-			}
-			default: $endpoint["status"] = "endpoint Not Found"; break;
-		}
-
-		return $endpoint;
 	}
 	//endregion
 	//endregion
-
 }
