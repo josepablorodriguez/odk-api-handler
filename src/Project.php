@@ -4,35 +4,27 @@ declare(strict_types = 1);
  * The OdkApiHandler Projects object.
  */
 
-namespace App\Ihub\odkApiHandler\src;
+namespace OdkApiHandler;
 
-class Project
+require_once("OdkCRUD.php");
+
+class Project extends OdkCRUD
 {
 	/**
-	 * The endpoint URLs.
+	 * Project Object.
 	 *
-	 * @var array
-	 */
-	private $endpoints;
-	/**
-	 * The stored projects to manage.
+	 * ```
+	 * $project = new Project([
+	 * 		'baseUrl' => 'https://your.domain.com',
+	 * 		'token' => 'access_token_obtained_after_logging_in',
+	 * ]);
+	 * ```
 	 *
-	 * @var array
+	 * @param array $config configuration data to set the Project Handler Object.
+	 * @return void
+	 * @link https://odkapihandler.portafolio.dev
+	 * @codeCoverageIgnore
 	 */
-	private $projects;
-	/**
-	 * The "Response" for the Project Handler's "Requests".
-	 *
-	 * @var array
-	 */
-	private $response;
-	/**
-	 * The "token" of the authenticated user, necessary for "Requests".
-	 *
-	 * @var string
-	 */
-	private $token;
-
 	public function __construct(array $config)
 	{
 		if(null == $config) return;
@@ -40,66 +32,37 @@ class Project
 			$this->token = $config["token"];
 
 		if(array_key_exists("baseUrl", $config)){
-			$this->endpoints["create"] = [
-				"url" => $config["baseUrl"] . "/v1/projects",
-				"method" => "post",
-			];
-			$this->endpoints["delete"] = [
-				"url" => $config["baseUrl"] . "/v1/projects/%PROJECT_ID%",
-				"method" => "del",
-			];
+			$this->setEndpoints($config["baseUrl"]);
 		}
+		$this->placeholder["objectId"] = "%PROJECT_ID%";
 	}
 
 	//region METHODS
 	//region PUBLIC
+
 	/**
-	 * Requests a new Project creation to the defined ODK Central server.
+	 * Set a User to a specific Project at the defined ODK Central server.
 	 *
-	 * @param string $name The "name" for the new Project.
 	 * @return void
 	 */
-	public function create(string $name){
-		if(strlen($name) == 0) return;
+	public function userAssignment(array $params){
+		if(count($params) > 0)
+			$this->endpoints["userProjectAssignment"]["url"] = str_replace(
+				["%PROJECT_ID%", "%ROLE_ID%", "%ACTOR_ID%"],
+				[$params["projectId"], $params["roleId"], $params["actorId"]],
+				$this->endpoints["userProjectAssignment"]["url"]
+			);
 		$curl = curl_init();
 
-		curl_setopt($curl, CURLOPT_URL, $this->endpoints["create"]["url"]);
+		curl_setopt($curl, CURLOPT_URL, $this->endpoints["userProjectAssignment"]["url"]);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($curl, CURLOPT_HEADER, FALSE);
 
 		curl_setopt($curl, CURLOPT_POST, TRUE);
 
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode(["name" => $name]));
-
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-			"Content-Type: application/json",
-			"Authorization: Bearer " . $this->token
-		));
-
-		$this->response = json_decode(curl_exec($curl), true);
-
-		if(array_key_exists("name", $this->response))
-			$this->projects[$this->response["name"]] = $this->response;
-
-		curl_close($curl);
-	}
-
-	/**
-	 * Requests to delete a Project to the defined ODK Central server.
-	 *
-	 * @param int|string $project_id The ID of the Project to be deleted.
-	 * @return void
-	 */
-	public function delete($project_id){
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, str_replace("%PROJECT_ID%", "".$project_id, $this->endpoints["delete"]["url"]));
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_HEADER, FALSE);
 		curl_setopt($curl, CURLOPT_HTTPHEADER, array(
 			"Authorization: Bearer " . $this->token
 		));
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "DELETE");
 
 		$this->response = json_decode(curl_exec($curl), true);
 
@@ -107,20 +70,53 @@ class Project
 	}
 
 	/**
-	 * Gets the "Response" of the last "Request".
+	 * Gets the list of Projects created or edited by this instance,
+	 * meaning it does NOT return the actual list of Projects from
+	 * the ODK Central server.
 	 *
+	 * @param string $name The name of the Project
 	 * @return array
 	 */
-	public function getResponse(): array
-	{
-		return $this->response;
+	public function getByName(string $name): array{
+		$all_projects = $this->getAll();
+		if(array_key_exists("code", $all_projects))
+			$this->response = $all_projects;
+		else if(count($all_projects) > 0 and array_key_exists("name", $all_projects[0]))
+			foreach ($all_projects as $key => $project) {
+				if($project["name"] == $name)
+					return $project;
+			}
+		return [];
 	}
 
-	public function getProjects($name){
-		return $this->projects[$name];
-	}
 	//endregion
 	//region PRIVATE
+
+	/**
+	 * Sets the Project related endpoints.
+	 *
+	 * @param string $base_url The base URL of hosted ODK Central server
+	 * @return void
+	 */
+	private function setEndpoints(string $base_url){
+		$this->endpoints["create"] = [
+			"url" => $base_url . "/v1/projects",
+			"method" => "post",
+		];
+		$this->endpoints["delete"] = [
+			"url" => $base_url . "/v1/projects/%PROJECT_ID%",
+			"method" => "del",
+		];
+		$this->endpoints["all"] = [
+			"url" => $base_url . "/v1/projects",
+			"method" => "get",
+		];
+		$this->endpoints["userProjectAssignment"] = [
+			"url" => $base_url . "/v1/projects/%PROJECT_ID%/assignments/%ROLE_ID%/%ACTOR_ID%",
+			"method" => "post",
+		];
+	}
+
 	//endregion
 	//endregion
 }

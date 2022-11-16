@@ -13,7 +13,7 @@ declare(strict_types = 1);
  * @link https://odkapihandler.portafolio.dev
  */
 
-namespace App\Ihub\odkApiHandler\src;
+namespace OdkApiHandler;
 
 use Exception;
 use InvalidArgumentException;
@@ -34,6 +34,12 @@ class OdkApiHandler
 	 */
 	private $authentication;
 	/**
+	 * The OdkApiHandler User Handler object.
+	 *
+	 * @var User
+	 */
+	private $user;
+	/**
 	 * The OdkApiHandler Project Handler object.
 	 *
 	 * @var Project
@@ -41,6 +47,22 @@ class OdkApiHandler
 	private $project;
 	//endregion
 
+	/**aut
+	 * OdkApiHandler Object.
+	 *
+	 * ```
+	 * $oaHandler = new OdkApiHandler([
+	 * 		'baseUrl' => 'https://your.domain.com',
+	 * 		'authentication_type' => 'session'|'https_basic'|'app_user',
+	 * 		'token' => null|'access_token_obtained_after_logging_in'
+	 * ]);
+	 * ```
+	 *
+	 * @param array $config configuration data to set the OdkApiHandler Object.
+	 * @return void
+	 * @link https://odkapihandler.portafolio.dev
+	 * @codeCoverageIgnore
+	 */
 	public function __construct(array $config)
 	{
 		if(null == $config) return;
@@ -48,7 +70,7 @@ class OdkApiHandler
 		if(array_key_exists('baseUrl', $config))
 			$this->base_url = $config['baseUrl'];
 		if(array_key_exists('authentication_type', $config))
-			$this->authentication = new Authentication($config['authentication_type'], $this->base_url);
+			$this->authentication = new Authentication($config);
 	}
 
 	// region METHODS
@@ -79,11 +101,24 @@ class OdkApiHandler
 		return $this->project;
 	}
 
+	/**
+	 * Gets the "User" handler Object.
+	 *
+	 * @return User
+	 */
+	public function user(): User{
+		if(null == $this->user){
+			$this->user = new User([
+				"baseUrl" => $this->base_url,
+				"token" => $this->authentication->getToken(),
+			]);
+		}
+
+		return $this->user;
+	}
+
 	//endregion
 	// region PRIVATE
-	private function setToken(string $token){
-
-	}
 	//endregion
 	//endregion
 }

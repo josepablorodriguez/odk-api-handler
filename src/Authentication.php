@@ -4,22 +4,12 @@ declare(strict_types = 1);
  * The OdkApiHandler Authentication object.
  */
 
-namespace App\Ihub\odkApiHandler\src;
+namespace OdkApiHandler;
 
-class Authentication
+require_once("OdkCRUD.php");
+
+class Authentication extends OdkCRUD
 {
-	/**
-	 * The endpoint URLs.
-	 *
-	 * @var array
-	 */
-	private $endpoints;
-	/**
-	 * The "Response" for the Authentication Handler's "Requests".
-	 *
-	 * @var array
-	 */
-	private $response;
 	/**
 	 * The authentication type.
 	 *
@@ -31,32 +21,35 @@ class Authentication
 	 * Authentication Object.
 	 *
 	 * ```
-	 * $authentication = new Authentication('session'|'https_basic'|'app_user');
+	 * $authentication = new Authentication([
+	 * 		'authentication_type' => 'session'|'https_basic'|'app_user',
+	 * 		'baseUrl' => 'https://your.domain.com',
+	 * 		'token => null|'access_token_obtained_after_logging_in'
+	 * ]);
 	 * ```
 	 *
-	 * @param string $authentication_type Authentication Type
+	 * @param array $config configuration data to set the Authentication Object.
 	 * @return void
 	 * @link https://odkapihandler.portafolio.dev
 	 * @codeCoverageIgnore
 	 */
-	public function __construct(string $authentication_type, string $base_url)
+	public function __construct(array $config)
 	{
-		$this->type = strtolower($authentication_type);
+		$this->type = strtolower($config["authentication_type"]);
 		switch($this->type){
 			case "https_basic": { break;}
 			case "app_user": { break;}
 			case "session": {
-				$this->endpoints["logIn"] = [
-					"url" => $base_url . "/v1/sessions",
-					"method" => "post",
-				];
-				$this->endpoints["logOut"] = [
-					"url" => $base_url . "/v1/sessions/%TOKEN%",
-					"method" => "del",
-				];
+				if(array_key_exists("baseUrl", $config))
+					$this->setEndpoints($config["baseUrl"]);
 			}
 		}
+		if(array_key_exists("token", $config) and null !== $config["token"])
+			$this->token = $config["token"];
 	}
+
+	//region METHOD
+	//region PUBLIC
 
 	/**
 	 * Requests a log-in to the defined ODK Central server.
@@ -81,9 +74,15 @@ class Authentication
 
 		curl_close($curl);
 
-		if(array_key_exists("token", $this->response))
+		if(array_key_exists("token", $this->response)) {
+			$this->token = $this->response["token"];
+			$this->csrf = $this->response["csrf"];
 			$this->endpoints["logOut"]["url"] =
-				str_replace("%TOKEN%", $this->response["token"], $this->endpoints["logOut"]["url"]);
+				str_replace("%TOKEN%", $this->token, $this->endpoints["logOut"]["url"]);
+		}
+		else{
+			$this->token = "";
+		}
 	}
 
 	/**
@@ -92,6 +91,10 @@ class Authentication
 	 * @return void
 	 */
 	public function logOut(){
+		if(strlen($this->token) > 0)
+			$this->endpoints["logOut"]["url"] =
+				str_replace("%TOKEN%", $this->token, $this->endpoints["logOut"]["url"]);
+
 		$curl = curl_init();
 
 		curl_setopt($curl, CURLOPT_URL, $this->endpoints["logOut"]["url"]);
@@ -101,24 +104,39 @@ class Authentication
 		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "DELETE");
 
 		curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-			"Authorization: Bearer " . $this->response["token"]
+			"Authorization: Bearer " . $this->token
 		));
 
-		$response = json_decode(curl_exec($curl), true);
-
-		$this->response = $response;
+		$this->response = json_decode(curl_exec($curl), true);
 
 		curl_close($curl);
 	}
 
 	/**
-	 * Gets the "Response" of the last "Request".
+	 * Requests to a none existent endpoint to the defined ODK Central server.
+	 * if error code 404.1 is received, user is logged in.
 	 *
-	 * @return array
+	 * @return bool
 	 */
-	public function getResponse(): array
-	{
-		return $this->response;
+	public function check(): bool{
+		$curl = curl_init();
+
+		curl_setopt($curl, CURLOPT_URL, $this->endpoints["check"]["url"]);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+		curl_setopt($curl, CURLOPT_HEADER, FALSE);
+
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+			"Authorization: Bearer " . $this->token
+		));
+
+		$response = json_decode(curl_exec($curl), true);
+
+		curl_close($curl);
+
+		if(array_key_exists("message", $response) and array_key_exists("code", $response)){
+			if($response["code"] == "404.1") return true;
+		}
+		return false;
 	}
 
 	/**
@@ -127,6 +145,36 @@ class Authentication
 	 * @return string
 	 */
 	public function getToken(): string{
-		return $this->response["token"];
+		return $this->token;
 	}
+
+	/**
+	 * Gets the "csrf" of the log-in "Request".
+	 *
+	 * @return string
+	 */
+	public function getCsrf(): string{
+		return $this->csrf;
+	}
+
+	//endregion
+	//region PRIVATE
+
+	private function setEndpoints(string $base_url){
+		$this->endpoints["logIn"] = [
+			"url" => $base_url . "/v1/sessions",
+			"method" => "post",
+		];
+		$this->endpoints["logOut"] = [
+			"url" => $base_url . "/v1/sessions/%TOKEN%",
+			"method" => "del",
+		];
+		$this->endpoints["check"] = [
+			"url" => $base_url . "/v1/check",
+			"method" => "get",
+		];
+	}
+
+	//endregion
+	//endregion
 }
