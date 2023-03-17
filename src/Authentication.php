@@ -48,7 +48,7 @@ class Authentication extends OdkCRUD
 			$this->token = $config["token"];
 	}
 
-	//region METHOD
+	//region METHODS
 	//region PUBLIC
 
 	/**
@@ -74,7 +74,7 @@ class Authentication extends OdkCRUD
 
 		curl_close($curl);
 
-		if(array_key_exists("token", $this->response)) {
+		if(null != $this->response and array_key_exists("token", $this->response)) {
 			$this->token = $this->response["token"];
 			$this->csrf = $this->response["csrf"];
 			$this->endpoints["logOut"]["url"] =
@@ -91,7 +91,7 @@ class Authentication extends OdkCRUD
 	 * @return void
 	 */
 	public function logOut(){
-		if(strlen($this->token) > 0)
+		if(null != $this->token and strlen($this->token) > 0)
 			$this->endpoints["logOut"]["url"] =
 				str_replace("%TOKEN%", $this->token, $this->endpoints["logOut"]["url"]);
 
@@ -160,6 +160,12 @@ class Authentication extends OdkCRUD
 	//endregion
 	//region PRIVATE
 
+	/**
+	 * Sets the Authentication's related endpoints.
+	 *
+	 * @param string $base_url The base URL of hosted ODK Central server
+	 * @return void
+	 */
 	private function setEndpoints(string $base_url){
 		$this->endpoints["logIn"] = [
 			"url" => $base_url . "/v1/sessions",

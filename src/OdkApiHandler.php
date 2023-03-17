@@ -45,6 +45,12 @@ class OdkApiHandler
 	 * @var Project
 	 */
 	private $project;
+	/**
+	 * The OdkApiHandler Form Handler object.
+	 *
+	 * @var Form
+	 */
+	private $form;
 	//endregion
 
 	/**aut
@@ -91,14 +97,28 @@ class OdkApiHandler
 	 * @return Project
 	 */
 	public function project(): Project{
-		if(null == $this->project){
+		if(null == $this->project)
 			$this->project = new Project([
 				"baseUrl" => $this->base_url,
 				"token" => $this->authentication->getToken(),
 			]);
-		}
 
 		return $this->project;
+	}
+
+	/**
+	 * Gets the "Form" handler Object.
+	 *
+	 * @return Form
+	 */
+	public function form(): Form{
+		if(null == $this->form)
+			$this->form = new Form([
+				"baseUrl" => $this->base_url,
+				"token" => $this->authentication->getToken(),
+			]);
+
+		return $this->form;
 	}
 
 	/**
@@ -107,14 +127,19 @@ class OdkApiHandler
 	 * @return User
 	 */
 	public function user(): User{
-		if(null == $this->user){
+		if(null == $this->user)
 			$this->user = new User([
 				"baseUrl" => $this->base_url,
 				"token" => $this->authentication->getToken(),
 			]);
-		}
 
 		return $this->user;
+	}
+
+	public function requestResult(): array{
+		return [
+			"invalid_credentials" => "401.2",
+		];
 	}
 
 	//endregion

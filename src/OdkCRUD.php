@@ -45,6 +45,9 @@ class OdkCRUD
 	public function create(array $requestData){
 		if(count($requestData) == 0) return;
 
+		$del_endpoint =
+			str_replace($this->placeholder["objectId"], $object_id, $this->endpoints["delete"]["url"]);
+
 		$curl = curl_init();
 
 		curl_setopt($curl, CURLOPT_URL, $this->endpoints["create"]["url"]);
