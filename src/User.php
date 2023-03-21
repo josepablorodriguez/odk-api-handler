@@ -64,40 +64,6 @@ class User extends OdkCRUD
 		return $this->response;
 	}
 
-	/**
-	 * Requests a specific USER previously assigned to a project
-	 * as an APP use rat the defined ODK Central server.
-	 *
-	 * @param array $requestData The name of the USER and PROJECT id.
-	 * @return array
-	 */
-	public function getAppByName(array $requestData): array{
-		if(count($requestData) == 0) return [];
-
-		$endpoint =
-			str_replace(
-				'%PROJECT_ID%',
-				$requestData['project_id'],
-				$this->endpoints["AppUsers"]["url"]
-			);
-
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $endpoint);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($curl, CURLOPT_HEADER, FALSE);
-
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-			"Authorization: Bearer " . $this->token
-		));
-
-		$this->response = json_decode(curl_exec($curl), true);
-
-		curl_close($curl);
-
-		return $this->response;
-	}
-
 	//endregion
 	//region PRIVATE
 
@@ -124,11 +90,6 @@ class User extends OdkCRUD
 			"url" => $base_url . "/v1/users?q=%USERNAME%",
 			"method" => "get",
 		];
-		$this->endpoints["AppUsers"] = [
-			"url" => $base_url . "/v1/projects/%PROJECT_ID%/app-users",
-			"method" => "get",
-		];
-
 	}
 
 	//endregion

@@ -112,6 +112,89 @@ class Project extends OdkCRUD
 		return [];
 	}
 
+	/**
+	 * Requests a specific APP-USER previously assigned to a PROJECT
+	 * at the defined ODK Central server.
+	 * App-Users are NOT standard ODK USERS, these are assigned per
+	 * PROJECT, have their own id per PROJECT, and a specific TOKEN
+	 * that changes per PROJECT.
+	 * An App-User is intended for access a PROJECT and its FORMS
+	 * via ODK-COLLECT mobile app or via web.
+	 *
+	 * @param array $requestData The name of the USER and PROJECT id.
+	 * @return array
+	 */
+	public function getAppUserByName(array $requestData): array{
+		if(count($requestData) == 0) return [];
+
+		$endpoint =
+			str_replace(
+				'%PROJECT_ID%',
+				$requestData['project_id'],
+				$this->endpoints["AppUsers"]["url"]
+			);
+
+		$curl = curl_init();
+
+		curl_setopt($curl, CURLOPT_URL, $endpoint);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+		curl_setopt($curl, CURLOPT_HEADER, FALSE);
+
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+			"Authorization: Bearer " . $this->token
+		));
+
+		$this->response = json_decode(curl_exec($curl), true);
+
+		curl_close($curl);
+
+		foreach($this->response as $index => $user){
+			if($user['displayName'] === $requestData['user_name'])
+				$this->response =  $user;
+		}
+
+		return $this->response;
+	}
+
+	/**
+	 * Requests all APP-USERS previously assigned to a PROJECT
+	 * at the defined ODK Central server.
+	 * App-Users are NOT standard ODK USERS, these are assigned per
+	 * PROJECT, have their own id per PROJECT, and a specific TOKEN
+	 * that changes per PROJECT.
+	 * An App-User is intended for access a PROJECT and its FORMS
+	 * via ODK-COLLECT mobile app or via web.
+	 *
+	 * @param string $project_id The PROJECT id.
+	 * @return array
+	 */
+	public function getAppUsers(string $project_id): array{
+		if(null == $project_id) return [];
+
+		$endpoint =
+			str_replace(
+				'%PROJECT_ID%',
+				$project_id,
+				$this->endpoints["AppUsers"]["url"]
+			);
+
+		$curl = curl_init();
+
+		curl_setopt($curl, CURLOPT_URL, $endpoint);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+		curl_setopt($curl, CURLOPT_HEADER, FALSE);
+
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+			"Authorization: Bearer " . $this->token
+		));
+
+		$this->response = json_decode(curl_exec($curl), true);
+
+		curl_close($curl);
+
+		return $this->response;
+	}
+
 	//endregion
 	//region PRIVATE
 
@@ -137,6 +220,10 @@ class Project extends OdkCRUD
 		$this->endpoints["userProjectAssignment"] = [
 			"url" => $base_url . "/v1/projects/%PROJECT_ID%/assignments/%ROLE_ID%/%ACTOR_ID%",
 			"method" => "post",
+		];
+		$this->endpoints["AppUsers"] = [
+			"url" => $base_url . "/v1/projects/%PROJECT_ID%/app-users",
+			"method" => "get",
 		];
 	}
 
