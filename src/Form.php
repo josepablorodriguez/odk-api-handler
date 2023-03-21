@@ -163,17 +163,41 @@ class Form extends OdkCRUD
 	 * @param array $requestData Containing the Form ID
 	 * @return array
 	 */
-	public function getQRImageCode(array $requestData): array{
+	public function getDraftQRImageCode(array $requestData): array{
 		if(count($requestData) == 0) return [];
 
 		$endpoint =
 			str_replace(
 				['%XML_FORM_ID%', '%PROJECT_ID%', '%TOKEN%'],
-				[ $requestData['xml_form_id'], $requestData['project_id'], $requestData['token']],
-				$this->endpoints["qrcode"]["url"]
+				[$requestData['xml_form_id'], $requestData['project_id'], $requestData['token']],
+				$this->endpoints["draft_qrcode"]["url"]
 			);
 
-		//var_dump($endpoint);
+		$qr_source = (new QRCode)->render($endpoint);
+
+		$this->response = [
+			"qrSource" => $qr_source,
+		];
+
+		return $this->response;
+	}
+
+	/**
+	 * Gets the Form QR code with a specific ID,
+	 * from the ODK Central server.
+	 *
+	 * @param array $requestData Containing the Form ID
+	 * @return array
+	 */
+	public function getQRImageCode(array $requestData): array{
+		if(count($requestData) == 0) return [];
+
+		$endpoint =
+			str_replace(
+				['%PROJECT_ID%', '%TOKEN%'],
+				[$requestData['project_id'], $requestData['token']],
+				$this->endpoints["qrcode"]["url"]
+			);
 
 		$qr_source = (new QRCode)->render($endpoint);
 
@@ -202,8 +226,12 @@ class Form extends OdkCRUD
 			"url" => $base_url . "/v1/projects/%PROJECT_ID%/forms/%XML_FORM_ID%/draft?ignoreWarnings=false",
 			"method" => "post",
 		];
-		$this->endpoints["qrcode"] = [
+		$this->endpoints["draft_qrcode"] = [
 			"url" => $base_url . "/v1/test/%TOKEN%/projects/%PROJECT_ID%/forms/%XML_FORM_ID%/draft",
+			"method" => "post",
+		];
+		$this->endpoints["qrcode"] = [
+			"url" => $base_url . "/v1/key/%TOKEN%/projects/%PROJECT_ID%",
 			"method" => "post",
 		];
 		$this->endpoints["enketo"] = [
