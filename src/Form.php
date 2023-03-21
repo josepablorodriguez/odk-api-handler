@@ -6,6 +6,9 @@ declare(strict_types = 1);
 
 namespace OdkApiHandler;
 
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
+
 require_once("OdkCRUD.php");
 
 class Form extends OdkCRUD
@@ -145,10 +148,38 @@ class Form extends OdkCRUD
 		$this->response['enketoPreview'] = str_replace(
 			"%ENKETO_ID%",
 			$this->response["enketoId"],
-			$this->endpoints["enketo"]
+			$this->endpoints["enketo"],
 		);
 
 		curl_close($curl);
+
+		return $this->response;
+	}
+
+	/**
+	 * Gets the Form QR code with a specific ID,
+	 * from the ODK Central server.
+	 *
+	 * @param array $requestData Containing the Form ID
+	 * @return array
+	 */
+	public function getQRImageCode(array $requestData): array{
+		if(count($requestData) == 0) return [];
+
+		$endpoint =
+			str_replace(
+				['%XML_FORM_ID%', '%PROJECT_ID%', '%TOKEN%'],
+				[ $requestData['xml_form_id'], $requestData['project_id'], $requestData['token']],
+				$this->endpoints["qrcode"]["url"]
+			);
+
+		//var_dump($endpoint);
+
+		$qr_source = (new QRCode)->render($endpoint);
+
+		$this->response = [
+			"qrSource" => $qr_source,
+		];
 
 		return $this->response;
 	}
@@ -171,10 +202,10 @@ class Form extends OdkCRUD
 			"url" => $base_url . "/v1/projects/%PROJECT_ID%/forms/%XML_FORM_ID%/draft?ignoreWarnings=false",
 			"method" => "post",
 		];
-		/*$this->endpoints["delete"] = [
-			"url" => $base_url . "/v1/projects/%PROJECT_ID%",
-			"method" => "del",
-		];*/
+		$this->endpoints["qrcode"] = [
+			"url" => $base_url . "/v1/test/%TOKEN%/projects/%PROJECT_ID%/forms/%XML_FORM_ID%/draft",
+			"method" => "post",
+		];
 		$this->endpoints["enketo"] = [
 			"url" => $base_url . "/-/preview/%ENKETO_ID%",
 			"method" => "get",

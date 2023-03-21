@@ -3,7 +3,6 @@ declare(strict_types = 1);
 /**
  * The OdkApiHandler Authentication object.
  */
-
 namespace OdkApiHandler;
 
 require_once("OdkCRUD.php");

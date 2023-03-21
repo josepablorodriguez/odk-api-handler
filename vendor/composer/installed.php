@@ -1,0 +1,41 @@
+<?php return array(
+    'root' => array(
+        'name' => 'josepablorodriguez/odk-api-handler',
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => 'ed1fdee8952dc958701d45c2f59b2bdb36f5ffe5',
+        'type' => 'library',
+        'install_path' => __DIR__ . '/../../',
+        'aliases' => array(),
+        'dev' => true,
+    ),
+    'versions' => array(
+        'chillerlan/php-qrcode' => array(
+            'pretty_version' => '4.3.3',
+            'version' => '4.3.3.0',
+            'reference' => '6356b246948ac1025882b3f55e7c68ebd4515ae3',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../chillerlan/php-qrcode',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'chillerlan/php-settings-container' => array(
+            'pretty_version' => '2.1.4',
+            'version' => '2.1.4.0',
+            'reference' => '1beb7df3c14346d4344b0b2e12f6f9a74feabd4a',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../chillerlan/php-settings-container',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'josepablorodriguez/odk-api-handler' => array(
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => 'ed1fdee8952dc958701d45c2f59b2bdb36f5ffe5',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+    ),
+);

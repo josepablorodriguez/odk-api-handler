@@ -3,7 +3,8 @@
   "description": "A php library to communicate with your ODK Central server",
   "type": "library",
   "require": {
-    "php": ">=7.0"
+    "php": ">=7.0",
+    "chillerlan/php-qrcode": "4.3.3"
   },
   "license": "proprietary",
   "authors": [
