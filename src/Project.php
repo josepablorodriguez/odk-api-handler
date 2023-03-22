@@ -140,9 +140,9 @@ class Project extends OdkCRUD
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($curl, CURLOPT_HEADER, FALSE);
 
-		/*curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array(
 			"Authorization: Bearer " . $this->token
-		));*/
+		));
 
 		$this->response = json_decode(curl_exec($curl), true);
 

@@ -7,7 +7,8 @@ declare(strict_types = 1);
 namespace OdkApiHandler;
 
 use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QROptions;
+//use chillerlan\QRCode\QROptions;
+use JsonException;
 
 require_once("OdkCRUD.php");
 
@@ -148,7 +149,7 @@ class Form extends OdkCRUD
 		$this->response['enketoPreview'] = str_replace(
 			"%ENKETO_ID%",
 			$this->response["enketoId"],
-			$this->endpoints["enketo"],
+			$this->endpoints["enketo"]
 		);
 
 		curl_close($curl);
@@ -157,23 +158,59 @@ class Form extends OdkCRUD
 	}
 
 	/**
-	 * Gets the Form QR code with a specific ID,
-	 * from the ODK Central server.
+	 * Gets a string representing the Form QR code with a specific ID, to pass as the "src"
+	 * attribute of an image HTML tag.
 	 *
-	 * @param array $requestData Containing the Form ID
+	 * @param array $requestData Containing the FORM id, PROJECT id, App-User token
 	 * @return array
+	 * @throws JsonException
 	 */
-	public function getDraftQRImageCode(array $requestData): array{
+	public function getDraftQRCode(array $requestData): array{
 		if(count($requestData) == 0) return [];
 
 		$endpoint =
 			str_replace(
 				['%XML_FORM_ID%', '%PROJECT_ID%', '%TOKEN%'],
 				[$requestData['xml_form_id'], $requestData['project_id'], $requestData['token']],
-				$this->endpoints["draft_qrcode"]["url"]
+				$this->endpoints["draftQrCode"]["url"]
+			);
+		$form_list_url =
+			str_replace(
+				'%PROJECT_ID%',
+				$requestData['project_id'],
+				$this->endpoints["all"]["url"]
 			);
 
-		$qr_source = (new QRCode)->render($endpoint);
+		$data = [
+			"general" => [
+				//server
+				"protocol" => "odk_default",
+				"server_url" => $endpoint,
+				//user
+				"navigation" => "swipe_buttons",
+				//"formlist_url" => $form_list_url,
+				//form management
+				"form_update_mode" => "match_exactly",
+				"constraint_behavior" => "on_finalize",
+				"autosend" => "wifi_only",
+				"instance_sync" => true,
+			],
+			"admin" => [
+				"edit_saved" => false,
+				"instance_form_sync" => true,
+				"automatic_update" => true,
+			],
+			"project" => [
+				"name" => "[DRAFT] " . $requestData["xml_form_title"],
+				"icon" => "📝",
+				"color" => "#FF0000",
+			],
+		];
+
+		$data = json_encode($data, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
+		$client_settings = base64_encode(zlib_encode($data, ZLIB_ENCODING_DEFLATE));
+
+		$qr_source = (new QRCode)->render($client_settings);
 
 		$this->response = [
 			"qrSource" => $qr_source,
@@ -188,18 +225,48 @@ class Form extends OdkCRUD
 	 *
 	 * @param array $requestData Containing the Form ID
 	 * @return array
+	 * @throws JsonException
 	 */
-	public function getQRImageCode(array $requestData): array{
+	public function getQRCode(array $requestData): array{
 		if(count($requestData) == 0) return [];
 
 		$endpoint =
 			str_replace(
-				['%PROJECT_ID%', '%TOKEN%'],
-				[$requestData['project_id'], $requestData['token']],
-				$this->endpoints["qrcode"]["url"]
+				['%XML_FORM_ID%', '%PROJECT_ID%', '%TOKEN%'],
+				[$requestData['xml_form_id'], $requestData['project_id'], $requestData['token']],
+				$this->endpoints["qrCode"]["url"]
 			);
 
-		$qr_source = (new QRCode)->render($endpoint);
+		$data = [
+			"general" => [
+				//server
+				"protocol" => "odk_default",
+				"server_url" => $endpoint,
+				//user
+				"navigation" => "swipe_buttons",
+				//"formlist_url" => $form_list_url,
+				//form management
+				"form_update_mode" => "match_exactly",
+				"constraint_behavior" => "on_finalize",
+				"autosend" => "wifi_only",
+				"instance_sync" => true,
+			],
+			"admin" => [
+				"edit_saved" => false,
+				"instance_form_sync" => true,
+				"automatic_update" => true,
+			],
+			"project" => [
+				"name" => $requestData["project_name"],
+				"icon" => "📝",
+				"color" => "#006863",
+			],
+		];
+
+		$data = json_encode($data, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
+		$client_settings = base64_encode(zlib_encode($data, ZLIB_ENCODING_DEFLATE));
+
+		$qr_source = (new QRCode)->render($client_settings);
 
 		$this->response = [
 			"qrSource" => $qr_source,
@@ -226,11 +293,11 @@ class Form extends OdkCRUD
 			"url" => $base_url . "/v1/projects/%PROJECT_ID%/forms/%XML_FORM_ID%/draft?ignoreWarnings=false",
 			"method" => "post",
 		];
-		$this->endpoints["draft_qrcode"] = [
+		$this->endpoints["draftQrCode"] = [
 			"url" => $base_url . "/v1/test/%TOKEN%/projects/%PROJECT_ID%/forms/%XML_FORM_ID%/draft",
 			"method" => "post",
 		];
-		$this->endpoints["qrcode"] = [
+		$this->endpoints["qrCode"] = [
 			"url" => $base_url . "/v1/key/%TOKEN%/projects/%PROJECT_ID%",
 			"method" => "post",
 		];
@@ -240,6 +307,10 @@ class Form extends OdkCRUD
 		];
 		$this->endpoints["details"] = [
 			"url" => $base_url . "/v1/projects/%PROJECT_ID%/forms/%XML_FORM_ID%",
+			"method" => "get",
+		];
+		$this->endpoints["all"] = [
+			"url" => $base_url . "/v1/projects/%PROJECT_ID%/forms",
 			"method" => "get",
 		];
 	}
