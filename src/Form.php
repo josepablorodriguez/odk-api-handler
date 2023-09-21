@@ -275,6 +275,12 @@ class Form extends OdkCRUD
 		return $this->response;
 	}
 
+	public function returnFromQR(string $data){
+		$value = (new QRCode)->readFromBlob($data);
+
+		return $value;
+
+	}
 	//endregion
 	//region PRIVATE
 

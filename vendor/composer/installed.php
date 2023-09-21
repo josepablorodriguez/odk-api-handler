@@ -3,7 +3,7 @@
         'name' => 'josepablorodriguez/odk-api-handler',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'ed1fdee8952dc958701d45c2f59b2bdb36f5ffe5',
+        'reference' => 'dc922918f8734c8478412a1a948718cff7d31b15',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         'chillerlan/php-qrcode' => array(
-            'pretty_version' => '4.3.3',
-            'version' => '4.3.3.0',
-            'reference' => '6356b246948ac1025882b3f55e7c68ebd4515ae3',
+            'pretty_version' => '4.3.4',
+            'version' => '4.3.4.0',
+            'reference' => '2ca4bf5ae048af1981d1023ee42a0a2a9d51e51d',
             'type' => 'library',
             'install_path' => __DIR__ . '/../chillerlan/php-qrcode',
             'aliases' => array(),
@@ -31,7 +31,7 @@
         'josepablorodriguez/odk-api-handler' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'ed1fdee8952dc958701d45c2f59b2bdb36f5ffe5',
+            'reference' => 'dc922918f8734c8478412a1a948718cff7d31b15',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
